@@ -14,7 +14,8 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite --host --port 3000",
+    "dev:html": "vite --host --open /demo/vanilla/index.html --port 3000",
     "build": "rimraf --glob build/**/* && tsc && vite build && dts-bundle-generator --config ./dts-bundle-generator.config.ts && copyfiles ./package.json build",
     "test": "vitest",
     "test:coverage": "vitest --coverage",

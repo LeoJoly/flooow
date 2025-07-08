@@ -1,4 +1,4 @@
-import "./style.css";
-import { sum } from "./sum";
+import './style.css'
+import Flooow from './lib/flooow'
 
-export { sum };
+export default Flooow
