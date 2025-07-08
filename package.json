@@ -20,6 +20,7 @@
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "eslint . --ext .js,.ts, --fix",
+    "lint:staged": "npm run typecheck && npm run lint:fix",
     "format:scripts": "prettier . --write",
     "typecheck": "tsc --noEmit --incremental"
   },
