@@ -19,12 +19,12 @@ class Flooow {
 
     // Check basic arguments
     if (!wrapper) {
-      logError("'wrapper' must be a valid HTML Element")
+      logError('"wrapper" must be a valid HTML Element')
       return
     }
 
     if (!src) {
-      logError("'src' property must be set")
+      logError('"src" property must be set')
       return
     }
 
