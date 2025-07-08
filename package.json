@@ -20,9 +20,10 @@
     "test:coverage": "vitest --coverage",
     "lint": "eslint . --ext .js,.ts",
     "lint:fix": "eslint . --ext .js,.ts, --fix",
-    "lint:staged": "npm run typecheck && npm run lint:fix",
+    "lint-staged": "npm run typecheck && npm run lint:fix",
     "format:scripts": "prettier . --write",
-    "typecheck": "tsc --noEmit --incremental"
+    "typecheck": "tsc --noEmit --incremental",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",
@@ -33,6 +34,7 @@
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.5.1",
+    "husky": "^9.1.7",
     "jiti": "^2.4.2",
     "postcss": "^8.5.6",
     "postcss-scss": "^4.0.9",
