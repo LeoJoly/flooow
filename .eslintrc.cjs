@@ -8,5 +8,6 @@ module.exports = {
     'no-console': 'warn',
     'no-var': 'error',
     'prefer-const': 'error',
-  }
+  },
+  ignorePatterns: ['dist', 'build', 'vite.config.ts'],
 }

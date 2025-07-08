@@ -1,0 +1,19 @@
+name: Typecheck
+
+on:
+  pull_request:
+    branches:
+      - uat
+      - main
+      - 'release/**'
+      - 'hotfix/**'
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Dependencies
+        run: npm install
+      - name: typecheck
+        run: npm run typecheck
