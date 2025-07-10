@@ -1,8 +1,18 @@
 import Flooow from '@/index'
 
-const flooow = new Flooow({
-  src: 'https://pp-animation-mockup.vercel.app/videos/OK_scroll-test.mp4',
-  wrapper: '#video-wrapper'
-})
+const $wrapper = document.querySelector('#video-wrapper')
 
-console.log(flooow)
+if ($wrapper) {
+  const flooow = new Flooow({
+    debug: true,
+    src: 'https://pp-animation-mockup.vercel.app/videos/OK_scroll-test.mp4',
+    wrapper: $wrapper
+  })
+
+  $wrapper.addEventListener('mousemove', (event) => {
+    const mouseX = (event as MouseEvent).clientX
+    const width = $wrapper.clientWidth
+
+    flooow.setVideoProgress(mouseX / width)
+  })
+}

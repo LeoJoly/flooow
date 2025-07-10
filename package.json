@@ -50,5 +50,8 @@
     "typescript-eslint": "^8.36.0",
     "vite": "^7.0.0",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "ua-parser-js": "^2.0.4"
   }
 }
