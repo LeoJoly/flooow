@@ -1,15 +1,18 @@
 import { logStuff } from '@/utils/log-stuff'
 import { UAParser } from 'ua-parser-js'
+import decodeVideo from './video-decoder'
 
 type FlooowOptions = {
   src: string
   wrapper: Element | string
   debug?: boolean
+  useWebCodec?: boolean
 }
 
 class Flooow {
   debug = false
   isSafari = false
+  useWebCodec = true
   src!: string
 
   videoProgress = 0
@@ -17,13 +20,13 @@ class Flooow {
   canvas!: HTMLCanvasElement
   context!: CanvasRenderingContext2D
 
-  frames: Array<HTMLImageElement> = []
+  frames: Array<ImageBitmap> = []
   frameRate = 0
 
   video!: HTMLVideoElement
   wrapper!: Element
 
-  constructor({ debug = false, src, wrapper }: FlooowOptions) {
+  constructor({ debug = false, src, useWebCodec = true, wrapper }: FlooowOptions) {
     // Make sure we have a DOM
     if (typeof document !== 'object') {
       logStuff('Flooow instance must be created in a DOM environment', true)
@@ -59,6 +62,7 @@ class Flooow {
     // Store options
     this.debug = debug
     this.src = src
+    this.useWebCodec = useWebCodec
 
     // Create a base video element to be displayed at the begenning
     this.video = document.createElement('video')
@@ -84,6 +88,42 @@ class Flooow {
 
     this.isSafari = browserEngine.name === 'WebKit'
     if (debug && this.isSafari) logStuff('Safari browser detected')
+
+    this.decodeVideo()
+  }
+
+  async decodeVideo() {
+    if (this.debug) logStuff('Decoding video...')
+
+    if (!this.useWebCodec) {
+      if (this.debug) logStuff('Cannot perform video decode: "useWebCodec" disabled', false, true)
+
+      return
+    }
+
+    if (!this.src) {
+      if (this.debug) console.warn('Cannot perform video decode: no `src` found', true)
+
+      return
+    }
+
+    try {
+      await decodeVideo(this.src, console.log, this.debug)
+      // const decoder = new Decoder(this.src)
+      // console.log(decoder)
+    } catch (error) {
+      if (this.debug) console.error('Error encountered while decoding video', error)
+
+      // Remove all decoded frames if a failure happens during decoding
+      this.frames = []
+
+      // Force a video reload when videoDecoder fails
+      this.video.load()
+    }
+  }
+
+  playVideoTo() {
+    this.video.currentTime = this.videoProgress * this.video.duration
   }
 
   setVideoProgress(progress: number) {
@@ -91,10 +131,6 @@ class Flooow {
 
     this.videoProgress = progress
     this.playVideoTo()
-  }
-
-  playVideoTo() {
-    this.video.currentTime = this.videoProgress * this.video.duration
   }
 }
 

@@ -52,6 +52,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "mp4box": "^2.1.0",
     "ua-parser-js": "^2.0.4"
   }
 }
