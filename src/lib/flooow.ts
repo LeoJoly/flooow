@@ -7,6 +7,7 @@ type FlooowOptions = {
   wrapper: Element | string
   debug?: boolean
   useWebCodec?: boolean
+  onReady?: () => void
 }
 
 class Flooow {
@@ -26,7 +27,9 @@ class Flooow {
   video!: HTMLVideoElement
   wrapper!: Element
 
-  constructor({ debug = false, src, useWebCodec = true, wrapper }: FlooowOptions) {
+  onReady?: () => void
+
+  constructor({ debug = false, src, useWebCodec = true, wrapper, onReady }: FlooowOptions) {
     // Make sure we have a DOM
     if (typeof document !== 'object') {
       logStuff('Flooow instance must be created in a DOM environment', true)
@@ -61,6 +64,7 @@ class Flooow {
 
     // Store options
     this.debug = debug
+    this.onReady = onReady
     this.src = src
     this.useWebCodec = useWebCodec
 
@@ -108,9 +112,13 @@ class Flooow {
     }
 
     try {
-      await decodeVideo(this.src, console.log, this.debug)
-      // const decoder = new Decoder(this.src)
-      // console.log(decoder)
+      await decodeVideo(
+        this.src,
+        (frame) => {
+          this.frames.push(frame)
+        },
+        this.debug
+      )
     } catch (error) {
       // eslint-disable-next-line no-console
       if (this.debug) console.error('Error encountered while decoding video', error)
@@ -121,6 +129,21 @@ class Flooow {
       // Force a video reload when videoDecoder fails
       this.video.load()
     }
+
+    // If no frames, something went wrong
+    if (this.frames.length === 0) {
+      if (this.debug) logStuff('No frames were received from webCodecs', true)
+
+      if (this.onReady) this.onReady()
+      return
+    }
+
+    // Calculate the frameRate based on number of frames and the duration
+    this.frameRate = this.frames.length / this.video.duration
+    if (this.debug) logStuff('Received ' + this.frames.length + ' frames')
+    if (this.debug) logStuff('Frame rate: ' + this.frameRate + ' fps')
+
+    if (this.onReady) this.onReady()
   }
 
   playVideoTo() {
