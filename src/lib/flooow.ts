@@ -102,7 +102,7 @@ class Flooow {
     }
 
     if (!this.src) {
-      if (this.debug) console.warn('Cannot perform video decode: no `src` found', true)
+      if (this.debug) logStuff('Cannot perform video decode: no `src` found', true)
 
       return
     }
@@ -112,6 +112,7 @@ class Flooow {
       // const decoder = new Decoder(this.src)
       // console.log(decoder)
     } catch (error) {
+      // eslint-disable-next-line no-console
       if (this.debug) console.error('Error encountered while decoding video', error)
 
       // Remove all decoded frames if a failure happens during decoding

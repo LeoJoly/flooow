@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as MP4Box from 'mp4box'
 import { logStuff } from '@/utils/log-stuff'
 
@@ -57,12 +56,24 @@ class Writer {
   }
 }
 
+type AvccBox = {
+  SPS: { data: Uint8Array; length: number }[]
+  PPS: { data: Uint8Array; length: number }[]
+  configurationVersion: number
+  AVCProfileIndication: number
+  profile_compatibility: number
+  AVCLevelIndication: number
+  lengthSizeMinusOne: number
+  nb_PPS_nalus: number
+  nb_SPS_nalus: number
+}
+
 /**
  * Extracts and formats the AVC configuration data from an MP4 AVCC box
  * @param avccBox The AVCC box containing H.264 configuration data
  * @returns A Uint8Array containing the formatted extradata buffer with SPS and PPS NAL units
  */
-const getExtradata = (avccBox: any): Uint8Array => {
+const getExtradata = (avccBox: AvccBox): Uint8Array => {
   let i
   let size = 7
 
@@ -141,6 +152,7 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
 
         // Handle decoder errors
         error: (e) => {
+          // eslint-disable-next-line no-console
           console.error(e)
           reject(e)
         }
@@ -153,7 +165,8 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
           if (debug) logStuff('Video with codec: ' + codec)
 
           // Extract codec configuration data
-          const avccBox = (mp4boxfile.moov.traks[0].mdia.minf.stbl.stsd.entries[0] as any).avcC
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const avccBox = (mp4boxfile.moov.traks[0].mdia.minf.stbl.stsd.entries[0] as any).avcC as AvccBox
           const extradata = getExtradata(avccBox)
 
           decoder.configure({ codec, description: extradata })
@@ -190,7 +203,10 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
         let offset = 0
 
         // Process incoming buffer chunks
-        function appendBuffers({ done, value }: any): any {
+        function appendBuffers({
+          done,
+          value
+        }: ReadableStreamReadResult<Uint8Array>): Promise<unknown> | null | undefined {
           // Handle end of stream
           if (done) {
             mp4boxfile.flush()
@@ -198,7 +214,7 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
           }
 
           // Append buffer to MP4Box file
-          const buf = value.buffer
+          const buf = value.buffer as MP4Box.MP4BoxBuffer
           buf.fileStart = offset
           offset += buf.byteLength
           mp4boxfile.appendBuffer(buf)
