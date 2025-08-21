@@ -1,4 +1,4 @@
-import { logStuff } from '@/utils/log-stuff'
+import messenger from '@/utils/messenger'
 import { UAParser } from 'ua-parser-js'
 import decodeVideo from './video-decoder'
 
@@ -32,18 +32,18 @@ class Flooow {
   constructor({ debug = false, src, useWebCodec = true, wrapper, onReady }: FlooowOptions) {
     // Make sure we have a DOM
     if (typeof document !== 'object') {
-      logStuff('Flooow instance must be created in a DOM environment', true)
+      messenger.error('Flooow instance must be created in a DOM environment')
       return
     }
 
     // Check basic arguments
     if (!wrapper) {
-      logStuff('"wrapper" must be a valid HTML Element', true)
+      messenger.error('"wrapper" must be a valid HTML Element')
       return
     }
 
     if (!src) {
-      logStuff('"src" property must be set')
+      messenger.error('"src" property must be set')
       return
     }
 
@@ -55,7 +55,7 @@ class Flooow {
       // if it's a string we search for it in the DOM
       const wrapperElement = document.querySelector(wrapper)
       if (!wrapperElement) {
-        logStuff('wrapper not found in the DOM', true)
+        messenger.error('wrapper not found in the DOM')
         return
       }
 
@@ -91,22 +91,22 @@ class Flooow {
     const browserEngine = ua.getEngine()
 
     this.isSafari = browserEngine.name === 'WebKit'
-    if (debug && this.isSafari) logStuff('Safari browser detected')
+    if (debug && this.isSafari) messenger.info('Safari browser detected')
 
     this.decodeVideo()
   }
 
   async decodeVideo() {
-    if (this.debug) logStuff('Decoding video...')
+    if (this.debug) messenger.info('Decoding video...')
 
     if (!this.useWebCodec) {
-      if (this.debug) logStuff('Cannot perform video decode: "useWebCodec" disabled', false, true)
+      if (this.debug) messenger.warn('Cannot perform video decode: "useWebCodec" disabled')
 
       return
     }
 
     if (!this.src) {
-      if (this.debug) logStuff('Cannot perform video decode: no `src` found', true)
+      if (this.debug) messenger.error('Cannot perform video decode: no `src` found')
 
       return
     }
@@ -132,7 +132,7 @@ class Flooow {
 
     // If no frames, something went wrong
     if (this.frames.length === 0) {
-      if (this.debug) logStuff('No frames were received from webCodecs', true)
+      if (this.debug) messenger.error('No frames were received from webCodecs')
 
       if (this.onReady) this.onReady()
       return
@@ -140,8 +140,8 @@ class Flooow {
 
     // Calculate the frameRate based on number of frames and the duration
     this.frameRate = this.frames.length / this.video.duration
-    if (this.debug) logStuff('Received ' + this.frames.length + ' frames')
-    if (this.debug) logStuff('Frame rate: ' + this.frameRate + ' fps')
+    if (this.debug) messenger.info('Received', this.frames.length, 'frames')
+    if (this.debug) messenger.info('Frame rate:', this.frameRate, 'fps')
 
     if (this.onReady) this.onReady()
   }

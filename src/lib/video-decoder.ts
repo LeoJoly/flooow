@@ -1,5 +1,5 @@
 import * as MP4Box from 'mp4box'
-import { logStuff } from '@/utils/log-stuff'
+import messenger from '@/utils/messenger'
 
 /**
  * A utility class for writing binary data to a Uint8Array buffer with specific size
@@ -122,7 +122,7 @@ const getExtradata = (avccBox: AvccBox): Uint8Array => {
  */
 const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug: boolean): Promise<unknown> =>
   new Promise<void>((resolve, reject) => {
-    if (debug) logStuff('Decoding video from ' + src)
+    if (debug) messenger.info('Decoding video from', src)
 
     try {
       // Create MP4Box file parser instance
@@ -162,7 +162,7 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
       mp4boxfile.onReady = (info) => {
         if (info && info.videoTracks && info.videoTracks[0]) {
           ;[{ codec }] = info.videoTracks
-          if (debug) logStuff('Video with codec: ' + codec)
+          if (debug) messenger.info('Video with codec:', codec)
 
           // Extract codec configuration data
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -241,11 +241,11 @@ const decodeVideo = (src: string, emitFrame: (frame: ImageBitmap) => void, debug
 export default (src: string, emitFrame: (frame: ImageBitmap) => void, debug: boolean) => {
   // Check if WebCodecs API is available
   if (typeof VideoDecoder === 'function' && typeof EncodedVideoChunk === 'function') {
-    if (debug) logStuff('WebCodecs is natively supported, using native version...')
+    if (debug) messenger.info('WebCodecs is natively supported, using native version...')
     return decodeVideo(src, emitFrame, debug)
   }
 
   // Fallback when WebCodecs is not supported
-  if (debug) logStuff('WebCodecs is not available in this browser.')
+  if (debug) messenger.info('WebCodecs is not available in this browser.')
   return Promise.resolve()
 }
