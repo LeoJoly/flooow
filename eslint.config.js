@@ -7,6 +7,7 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   {
+    // files to process, including the .js files in the node_modules directory
     files: ["**/*.ts"],
 
     languageOptions: {
