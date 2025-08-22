@@ -17,6 +17,8 @@ class Flooow {
   src!: string
 
   videoProgress = 0
+  currentTime = 0
+  targetTime = 0
 
   canvas!: HTMLCanvasElement
   context!: CanvasRenderingContext2D | null
@@ -27,7 +29,12 @@ class Flooow {
   video!: HTMLVideoElement
   wrapper!: Element
 
+  transitionSpeed = 8 // How fast to transition between frames, in frames per second
+  frameThreshold = 0.1 // When to stop the video animation, in seconds
+  transitioningRaf: number | null = null
+
   onReady?: () => void
+  resize?: () => void
 
   constructor({ debug = false, src, useWebCodec = true, wrapper, onReady }: FlooowOptions) {
     // Make sure we have a DOM
@@ -92,6 +99,16 @@ class Flooow {
 
     this.isSafari = browserEngine.name === 'WebKit'
     if (debug && this.isSafari) messenger.info('Safari browser detected')
+
+    // Add resize listener
+    this.resize = () => {
+      if (this.debug) messenger.info('Resizing video')
+      this.updateCanvasSize()
+      this.paintFrame(Math.floor(this.currentTime * this.frameRate))
+    }
+
+    window.addEventListener('resize', this.resize)
+    this.video.addEventListener('progress', this.resize)
 
     this.decodeVideo()
   }
@@ -191,13 +208,98 @@ class Flooow {
   }
 
   playVideoTo() {
-    this.video.currentTime = this.videoProgress * this.video.duration
+    if (this.debug) messenger.info('Transitioning targetTime:', this.targetTime, 'currentTime:', this.currentTime)
+
+    const diff = this.targetTime - this.currentTime
+    const isForwardTransition = diff > 0
+
+    type TickOptions = {
+      startCurrentTime: number
+      startTimestamp: number
+      timestamp: number
+    }
+
+    const tick = ({ startCurrentTime, startTimestamp }: TickOptions) => {
+      // if frameThreshold is too low to catch condition Math.abs(this.targetTime - this.currentTime) < this.frameThreshold
+      const hasPassedThreshold = isForwardTransition
+        ? this.currentTime >= this.targetTime
+        : this.currentTime <= this.targetTime
+
+      // If we are already close enough to our target, pause the video and return.
+      // This is the base case of the recursive function
+      if (
+        isNaN(this.targetTime) ||
+        // If the currentTime is already close enough to the targetTime
+        Math.abs(this.targetTime - this.currentTime) < this.frameThreshold ||
+        hasPassedThreshold
+      ) {
+        this.video.pause()
+        if (this.transitioningRaf) {
+          cancelAnimationFrame(this.transitioningRaf)
+          this.transitioningRaf = null
+        }
+        return
+      }
+
+      // Make sure we don't go out of time bounds
+      if (this.targetTime > this.video.duration) this.targetTime = this.video.duration
+      if (this.targetTime < 0) this.targetTime = 0
+
+      // How far forward we need to transition
+      const transitionForward = this.targetTime - this.currentTime
+
+      if (this.canvas) {
+        this.currentTime = this.targetTime
+        this.paintFrame(Math.floor(this.currentTime * this.frameRate))
+      } else if (this.isSafari || !isForwardTransition) {
+        // We can't use a negative playbackRate, so if the video needs to go backwards,
+        // We have to use the inefficient method of modifying currentTime rapidly to
+        // get an effect.
+        this.video.pause()
+        this.currentTime = this.targetTime
+        this.video.currentTime = this.currentTime
+      } else {
+        // Otherwise, we play the video and adjust the playbackRate to get a smoother
+        // animation effect.
+        const playbackRate = Math.max(Math.min(transitionForward * 4, this.transitionSpeed, 16), 1)
+        if (this.debug) messenger.info('ScrollyVideo playbackRate:', playbackRate)
+        if (!isNaN(playbackRate)) {
+          this.video.playbackRate = playbackRate
+          this.video.play()
+        }
+        // Set the currentTime to the video's currentTime
+        this.currentTime = this.video.currentTime
+      }
+
+      // Recursively calls ourselves until the animation is done.
+      if (typeof requestAnimationFrame === 'function') {
+        this.transitioningRaf = requestAnimationFrame((currentTimestamp) =>
+          tick({
+            startCurrentTime,
+            startTimestamp,
+            timestamp: currentTimestamp
+          })
+        )
+      }
+    }
+
+    if (typeof requestAnimationFrame === 'function') {
+      this.transitioningRaf = requestAnimationFrame((startTimestamp) => {
+        tick({
+          startCurrentTime: this.currentTime,
+          startTimestamp,
+          timestamp: startTimestamp
+        })
+      })
+    }
   }
 
   setVideoProgress(progress: number) {
     if (this.videoProgress === progress) return
 
     this.videoProgress = progress
+    this.currentTime = this.video.currentTime
+    this.targetTime = this.videoProgress * this.video.duration
     this.playVideoTo()
   }
 
@@ -208,6 +310,15 @@ class Flooow {
 
     this.canvas.width = wrapperRect.width
     this.canvas.height = wrapperRect.height
+  }
+
+  destroy() {
+    if (this.debug) messenger.info('Destroying ScrollyVideo')
+
+    if (this.resize) window.removeEventListener('resize', this.resize)
+
+    // Clear component
+    if (this.wrapper) this.wrapper.innerHTML = ''
   }
 }
 
