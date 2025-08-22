@@ -7,10 +7,7 @@ if ($wrapper) {
     debug: true,
     src: 'https://pp-animation-mockup.vercel.app/videos/OK_scroll-test.mp4',
     useWebCodec: true,
-    wrapper: $wrapper,
-    onReady: () => {
-      console.log('ready')
-    }
+    wrapper: $wrapper
   })
 
   $wrapper.addEventListener('mousemove', (event) => {
