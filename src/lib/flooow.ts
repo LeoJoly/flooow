@@ -19,7 +19,7 @@ class Flooow {
   videoProgress = 0
 
   canvas!: HTMLCanvasElement
-  context!: CanvasRenderingContext2D
+  context!: CanvasRenderingContext2D | null
 
   frames: Array<ImageBitmap> = []
   frameRate = 0
@@ -143,7 +143,51 @@ class Flooow {
     if (this.debug) messenger.info('Received', this.frames.length, 'frames')
     if (this.debug) messenger.info('Frame rate:', this.frameRate, 'fps')
 
+    this.canvas = document.createElement('canvas')
+    this.canvas.classList.add('flooow-canvas')
+    this.updateCanvasSize()
+    this.context = this.canvas.getContext('2d')
+
+    // Hide the video and add the canvas to the container
+    this.video.style.display = 'none'
+    this.wrapper.appendChild(this.canvas)
+
+    // Paint our first frame
+    this.paintFrame(0)
+
     if (this.onReady) this.onReady()
+  }
+
+  paintFrame(frameIndex: number) {
+    const frame = this.frames[frameIndex]
+
+    if (!frame || !this.context) return
+
+    if (this.debug) messenger.info('Painting frame', frameIndex)
+
+    const { width: canvasWidth, height: canvasHeight } = this.canvas
+    const { width: frameWidth, height: frameHeight } = frame
+
+    // Compare the frame size to the canvas size
+    // If the frame is bigger, we scale it down
+    // If the frame is smaller, we scale it up
+    const scaleX = canvasWidth / frameWidth
+    const scaleY = canvasHeight / frameHeight
+
+    // Define a single scale to keep image proportions
+    const scale = Math.max(scaleX, scaleY)
+
+    // Clear the canvas
+    this.context.clearRect(0, 0, canvasWidth, canvasHeight)
+
+    // Center and fit the frame in the canvas
+    this.context.drawImage(
+      frame,
+      (canvasWidth - frameWidth * scale) / 2,
+      (canvasHeight - frameHeight * scale) / 2,
+      frameWidth * scale,
+      frameHeight * scale
+    )
   }
 
   playVideoTo() {
@@ -155,6 +199,15 @@ class Flooow {
 
     this.videoProgress = progress
     this.playVideoTo()
+  }
+
+  updateCanvasSize() {
+    if (!this.canvas || !this.wrapper) return
+
+    const wrapperRect = this.wrapper.getBoundingClientRect()
+
+    this.canvas.width = wrapperRect.width
+    this.canvas.height = wrapperRect.height
   }
 }
 
