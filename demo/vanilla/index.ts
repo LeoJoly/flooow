@@ -5,7 +5,7 @@ const $wrapper = document.querySelector('#video-wrapper')
 if ($wrapper) {
   const flooow = new Flooow({
     debug: true,
-    src: 'https://pp-animation-mockup.vercel.app/videos/OK_scroll-test.mp4',
+    src: 'https://videos.pexels.com/video-files/2313698/2313698-uhd_2560_1440_25fps.mp4',
     useWebCodec: true,
     wrapper: $wrapper
   })
