@@ -10,6 +10,7 @@ const getPackageName = () => {
 const getPackageNameCamelCase = () => {
   try {
     return getPackageName().replace(/-./g, (char) => char[1].toUpperCase())
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     throw new Error('Name property in package.json is missing.')
   }
