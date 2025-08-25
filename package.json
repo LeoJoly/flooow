@@ -1,6 +1,6 @@
 {
   "name": "flooow",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple yet powerful video scrubbing library for smooth frame-by-frame playback control!",
   "license": "MIT",
   "author": "Léo Joly",
